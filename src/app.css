@@ -4,14 +4,14 @@
 }
 
 .plating-view {
-    height: 30vh;
+    height: 33vh;
 }
 
 
 
-@media (min-width: 991.98px) {
+@media (min-width: 768px) {
     .plating-view {
-        height: 90vh !important;
+        height: 95vh !important;
     }
 
 } 
