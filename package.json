@@ -15,6 +15,7 @@
   "devDependencies": {
     "@types/codemirror": "0.0.102",
     "@types/mustache": "^4.1.0",
+    "@types/pako": "^1.0.1",
     "css-loader": "^5.0.1",
     "style-loader": "^2.0.0",
     "ts-loader": "^8.0.12",
@@ -28,6 +29,8 @@
     "@codemirror/next": "^0.15.0",
     "@popperjs/core": "^2.6.0",
     "bootstrap": "^5.0.0-beta1",
-    "mustache": "^4.1.0"
+    "js-base64": "^3.6.0",
+    "mustache": "^4.1.0",
+    "pako": "^2.0.2"
   }
 }

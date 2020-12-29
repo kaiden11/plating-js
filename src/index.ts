@@ -4,6 +4,8 @@ import { EditorState, EditorStateConfig, StateCommand } from "@codemirror/next/s
 import { basicSetup } from "@codemirror/next/basic-setup"
 import { defaultKeymap, indentLess, indentMore } from "@codemirror/next/commands"
 import { json } from "@codemirror/next/lang-json"
+import * as pako from "pako"
+import { Base64 } from "js-base64"
 
 import * as Mustache from "mustache"
 
@@ -24,6 +26,42 @@ export const insertTab: StateCommand = ({state, dispatch}) => {
 
 let debounce_timer: NodeJS.Timeout = null;
 
+let starting_json_content = "{\"hello\":\"world\"}";
+let starting_mustache_content = "{{hello}}";
+
+if( window.location.hash != null && window.location.hash ) {
+    var hash = window.location.hash;
+
+    try {
+
+        var u8 = Base64.toUint8Array( hash );
+
+        var inflated = pako.inflate( u8 );
+
+        if( inflated != null && inflated ) {
+            let utf8decoder = new TextDecoder()
+
+            var json_str = utf8decoder.decode( inflated );
+
+            let obj = JSON.parse( json_str );
+
+            console.log( obj );
+
+            if( obj != null && obj.json !== 'undefined' && obj.json != null ) {
+                starting_json_content = obj.json;
+            }
+
+            if( obj != null && obj.mustache !== 'undefined' && obj.mustache != null ) {
+                starting_mustache_content = obj.mustache;
+            }
+            
+        }
+
+    } catch( err ) {
+        console.log( err );
+    }
+}
+
 
 const common_setup_array = [
     basicSetup,
@@ -38,7 +76,7 @@ const common_setup_array = [
 
             debounce_timer = setTimeout( 
                 () => {
-                    renderMustache();
+                    updateHashAndRenderMustache();
                     clearTimeout( debounce_timer );
                     debounce_timer = null;
                 },
@@ -76,7 +114,7 @@ let json_view = new EditorView(
     {
         state: EditorState.create(
             {
-                doc: "{\"hello\":\"world\"}",
+                doc: starting_json_content,
                 extensions: [
                     ...common_setup_array,
                     json()
@@ -90,7 +128,7 @@ let mustache_view = new EditorView(
     {
         state: EditorState.create(
             {
-                doc: "{{hello}}",
+                doc: starting_mustache_content,
                 extensions: [
                     ...common_setup_array
                 ],
@@ -99,11 +137,12 @@ let mustache_view = new EditorView(
     }
 );
 
-function renderMustache() {
+function updateHashAndRenderMustache() {
 
     let err_array : String[] = [];
 
     if( json_view && mustache_view ) {
+
         let obj : object = null;
         try {
             obj = JSON.parse(
@@ -147,13 +186,34 @@ function renderMustache() {
             new_pre.innerText = err_array.join( '\n');
             mustache_output_el.appendChild( new_pre );
         }
+
+        if( err_array.length <= 0 && obj != null && mustache_template != null ) {
+            var payload = {
+                json: json_view.state.doc.sliceString( 0 ),
+                mustache: mustache_template
+            }
+
+            var stringified = JSON.stringify( payload );
+
+            var deflated = pako.deflate( stringified );
+
+            var encoded = Base64.fromUint8Array( deflated );
+
+            window.location.hash = encoded;
+        }
     }
+
+    title_el.innerHTML = '';
+    title_el.innerText = `${window.location.toString().length} out of 2000`
 };
+
 
 
 let json_view_el = document.body.querySelector( '#json-view' );
 let mustache_view_el = document.body.querySelector( '#mustache-view' );
 let mustache_output_el = document.body.querySelector( '#mustache-output' );
+
+let title_el = document.head.querySelector( 'title' );
 
 if( json_view_el ) {
     json_view_el.appendChild(json_view.dom)
@@ -162,3 +222,5 @@ if( json_view_el ) {
 if( mustache_view_el ) {
     mustache_view_el.appendChild(mustache_view.dom)
 }
+
+
