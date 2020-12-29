@@ -4,6 +4,7 @@ import { EditorState, EditorStateConfig, StateCommand } from "@codemirror/next/s
 import { basicSetup } from "@codemirror/next/basic-setup"
 import { defaultKeymap, indentLess, indentMore } from "@codemirror/next/commands"
 import { json } from "@codemirror/next/lang-json"
+import { oneDark } from "@codemirror/next/theme-one-dark"
 import * as pako from "pako"
 import { Base64 } from "js-base64"
 
@@ -65,6 +66,7 @@ if( window.location.hash != null && window.location.hash ) {
 
 const common_setup_array = [
     basicSetup,
+    oneDark,
     EditorState.tabSize.of( 4 ),
     EditorState.changeFilter.of(
          (tr) => {
@@ -223,4 +225,9 @@ if( mustache_view_el ) {
     mustache_view_el.appendChild(mustache_view.dom)
 }
 
-
+setTimeout(
+    () => {
+        updateHashAndRenderMustache();
+    },
+    10
+);

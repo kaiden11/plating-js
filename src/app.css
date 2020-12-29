@@ -1,0 +1,18 @@
+
+#json-view, #mustache-view, #mustache-output, .cm-wrap {
+    height: 100%;
+}
+
+.plating-view {
+    height: 30vh;
+}
+
+
+
+@media (min-width: 991.98px) {
+    .plating-view {
+        height: 90vh !important;
+    }
+
+} 
+
