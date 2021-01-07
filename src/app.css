@@ -5,13 +5,23 @@
 
 .plating-view {
     height: 33vh;
+    max-height: 33vh;
+    overflow-y: auto;
+    padding: 0.1rem;
+}
+
+.plating-view#mustache-output {
+    overflow-x: auto;
+    display: block;
+
 }
 
 
 
 @media (min-width: 768px) {
     .plating-view {
-        height: 95vh !important;
+        height: 98vh !important;
+        max-height: 98vh !important;
     }
 
 } 

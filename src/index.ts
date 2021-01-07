@@ -7,6 +7,8 @@ import { json } from "@codemirror/next/lang-json"
 import { oneDark } from "@codemirror/next/theme-one-dark"
 import * as pako from "pako"
 import { Base64 } from "js-base64"
+import { BehaviorSubject, fromEvent } from 'rxjs';
+import { distinctUntilChanged, debounceTime, debounce } from 'rxjs/operators';
 
 import * as Mustache from "mustache"
 
@@ -25,11 +27,10 @@ export const insertTab: StateCommand = ({state, dispatch}) => {
     return true;
 }
 
-let debounce_timer: NodeJS.Timeout = null;
-
 let starting_json_content = "{\"hello\":\"world\"}";
 let starting_mustache_content = "{{hello}}";
 
+// Initial load
 if( window.location.hash != null && window.location.hash ) {
     var hash = window.location.hash;
 
@@ -64,30 +65,11 @@ if( window.location.hash != null && window.location.hash ) {
 }
 
 
+
 const common_setup_array = [
     basicSetup,
     oneDark,
     EditorState.tabSize.of( 4 ),
-    EditorState.changeFilter.of(
-         (tr) => {
-
-            if( debounce_timer != null ) {
-                clearTimeout( debounce_timer );
-                debounce_timer = null;
-            }
-
-            debounce_timer = setTimeout( 
-                () => {
-                    updateHashAndRenderMustache();
-                    clearTimeout( debounce_timer );
-                    debounce_timer = null;
-                },
-                250
-            );
-
-            return true;
-         }
-    ),
     keymap( 
         [
             ...defaultKeymap,
@@ -111,6 +93,8 @@ const common_setup_array = [
     )
 ];
 
+const json_bs = new BehaviorSubject<string>( starting_json_content );
+const mustache_bs = new BehaviorSubject<string>( starting_mustache_content );
 
 let json_view = new EditorView(
     {
@@ -119,7 +103,19 @@ let json_view = new EditorView(
                 doc: starting_json_content,
                 extensions: [
                     ...common_setup_array,
-                    json()
+                    json(),
+                    EditorState.changeFilter.of(
+                        (tr) => {
+                            
+                            if( tr.docChanged ) {
+                                json_bs.next(
+                                    tr.state.doc.sliceString( 0 )
+                                );
+                            }
+
+                           return true;
+                        }
+                   )                    
                 ]
             }
         )
@@ -132,14 +128,151 @@ let mustache_view = new EditorView(
             {
                 doc: starting_mustache_content,
                 extensions: [
-                    ...common_setup_array
+                    ...common_setup_array,
+                    EditorState.changeFilter.of(
+                         (tr) => {
+
+                            if( tr.docChanged ) {
+                                mustache_bs.next(
+                                    tr.state.doc.sliceString( 0 )
+                                );
+                            }
+
+                            return true;
+                         }
+                    )
                 ],
             }
         )
     }
 );
 
-function updateHashAndRenderMustache() {
+function updateContentFromHashIfNecessary() {
+    
+    if( window.location.hash != null && window.location.hash ) {
+        var hash = window.location.hash;
+    
+        try {
+    
+            var u8 = Base64.toUint8Array( hash );
+    
+            var inflated = pako.inflate( u8 );
+    
+            if( inflated != null && inflated ) {
+                let utf8decoder = new TextDecoder()
+    
+                var json_str = utf8decoder.decode( inflated );
+    
+                let obj = JSON.parse( json_str );
+       
+                if( obj != null && obj.json !== 'undefined' && obj.json != null ) {
+                    let json_content = <string> obj.json;
+
+                    if( json_content != json_view.state.doc.sliceString( 0 ) ) {
+                        // Hash content differs, update the view
+                        console.log( 'updating json view' );
+
+                        json_view.dispatch(
+                            json_view.state.update(
+                                {
+                                    changes: {
+                                        from: 0,
+                                        to: json_view.state.doc.length,
+                                        insert: json_content
+                                    }
+                                }
+                            )
+                        );
+                        
+                    }
+                }
+    
+                if( obj != null && obj.mustache !== 'undefined' && obj.mustache != null ) {
+                    let mustache_content = <string> obj.mustache;
+
+                    if( mustache_content != mustache_view.state.doc.sliceString( 0 ) ) {
+                        // Hash content differs, update the view
+                        console.log( 'updating mustache view' );
+
+                        mustache_view.dispatch(
+                            mustache_view.state.update(
+                                {
+                                    changes: {
+                                        from: 0,
+                                        to: mustache_view.state.doc.length,
+                                        insert: mustache_content
+                                    }
+                                }
+                            )
+                        );
+                    }
+                }
+                
+            }
+    
+        } catch( err ) {
+            console.log( err );
+        }
+    }
+}
+
+
+json_bs.pipe(
+    debounceTime( 250 ),
+    distinctUntilChanged()
+).subscribe(
+    (_) => {
+        updateHash();
+    }
+);
+
+mustache_bs.pipe(
+    debounceTime( 250 ),
+    distinctUntilChanged()
+).subscribe(
+    (_) => {
+        updateHash();
+    }
+);
+
+const hash_changed = fromEvent( window, 'hashchange' );
+
+hash_changed
+    .pipe(
+        debounceTime( 250 )
+    )
+    .subscribe(
+        (_) => {
+            // console.log( 'hash has changed! ' );
+            
+            updateContentFromHashIfNecessary();
+            renderMustache();
+        }
+    )
+;
+
+function updateHash() {
+
+    let err_array : String[] = [];
+
+    if( json_view && mustache_view ) {
+
+        var payload = {
+            json: json_view.state.doc.sliceString( 0 ),
+            mustache: mustache_view.state.doc.sliceString( 0 )
+        }
+
+        var stringified = JSON.stringify( payload );
+
+        var deflated = pako.deflate( stringified );
+
+        var encoded = Base64.fromUint8Array( deflated );
+
+        window.location.hash = encoded;
+    }
+}
+
+function renderMustache() {
 
     let err_array : String[] = [];
 
@@ -176,32 +309,12 @@ function updateHashAndRenderMustache() {
         if( err_array.length <= 0 && output ) {
 
             mustache_output_el.innerHTML = '';
-            let new_pre = document.createElement( 'pre' );
-            new_pre.innerText = output;
-        
-            mustache_output_el.appendChild( new_pre );
+            mustache_output_el.innerHTML = output;
 
         } else {
 
             mustache_output_el.innerHTML = '';
-            let new_pre = document.createElement( 'pre' );
-            new_pre.innerText = err_array.join( '\n');
-            mustache_output_el.appendChild( new_pre );
-        }
-
-        if( err_array.length <= 0 && obj != null && mustache_template != null ) {
-            var payload = {
-                json: json_view.state.doc.sliceString( 0 ),
-                mustache: mustache_template
-            }
-
-            var stringified = JSON.stringify( payload );
-
-            var deflated = pako.deflate( stringified );
-
-            var encoded = Base64.fromUint8Array( deflated );
-
-            window.location.hash = encoded;
+            mustache_output_el.innerHTML = err_array.join( '\n');
         }
     }
 
@@ -225,9 +338,10 @@ if( mustache_view_el ) {
     mustache_view_el.appendChild(mustache_view.dom)
 }
 
+
 setTimeout(
     () => {
-        updateHashAndRenderMustache();
+        renderMustache();
     },
     10
 );
