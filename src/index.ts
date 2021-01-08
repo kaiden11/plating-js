@@ -7,10 +7,11 @@ import { json } from "@codemirror/next/lang-json"
 import { oneDark } from "@codemirror/next/theme-one-dark"
 import * as pako from "pako"
 import { Base64 } from "js-base64"
-import { BehaviorSubject, fromEvent } from 'rxjs';
-import { distinctUntilChanged, debounceTime, debounce } from 'rxjs/operators';
+import { BehaviorSubject,  fromEvent, merge } from 'rxjs';
+import { debounceTime, filter } from 'rxjs/operators';
 
 import * as Mustache from "mustache"
+import { render } from "mustache"
 
 export const insertTab: StateCommand = ({state, dispatch}) => {
 
@@ -106,7 +107,7 @@ let json_view = new EditorView(
                     json(),
                     EditorState.changeFilter.of(
                         (tr) => {
-                            
+
                             if( tr.docChanged ) {
                                 json_bs.next(
                                     tr.state.doc.sliceString( 0 )
@@ -170,7 +171,7 @@ function updateContentFromHashIfNecessary() {
 
                     if( json_content != json_view.state.doc.sliceString( 0 ) ) {
                         // Hash content differs, update the view
-                        console.log( 'updating json view' );
+                        // console.log( 'updating json view' );
 
                         json_view.dispatch(
                             json_view.state.update(
@@ -183,7 +184,6 @@ function updateContentFromHashIfNecessary() {
                                 }
                             )
                         );
-                        
                     }
                 }
     
@@ -192,7 +192,7 @@ function updateContentFromHashIfNecessary() {
 
                     if( mustache_content != mustache_view.state.doc.sliceString( 0 ) ) {
                         // Hash content differs, update the view
-                        console.log( 'updating mustache view' );
+                        // console.log( 'updating mustache view' );
 
                         mustache_view.dispatch(
                             mustache_view.state.update(
@@ -217,39 +217,57 @@ function updateContentFromHashIfNecessary() {
 }
 
 
-json_bs.pipe(
-    debounceTime( 250 ),
-    distinctUntilChanged()
+let is_typing = false;
+
+// Consider ourselves 'typing' if we've seen
+// a document change / transaction in the last
+// 1000ms
+merge( json_bs, mustache_bs )
+    .subscribe( () => { is_typing = true })
+
+merge( json_bs, mustache_bs )
+    .pipe( debounceTime( 1000 ) )
+    .subscribe( () => { is_typing = false })
+
+// Render any mustache changes after 250ms
+// of no activity.
+merge(
+    json_bs,
+    mustache_bs
+).pipe(
+    debounceTime( 250 )
 ).subscribe(
+    (_) => {
+        renderMustache();
+    }
+);
+
+// Update the hash after 250ms of inactivity
+merge(
+    json_bs,
+    mustache_bs
+).pipe( 
+    debounceTime( 250 )
+)
+.subscribe(
     (_) => {
         updateHash();
     }
 );
 
-mustache_bs.pipe(
-    debounceTime( 250 ),
-    distinctUntilChanged()
+const popstate_event = fromEvent( window, 'popstate' );
+
+// Detect pop state, but filter if we see that we've been
+// typing in the last 1000ms (is_typing).
+popstate_event.pipe(
+    filter( () => !is_typing ),
+    debounceTime( 250 )
 ).subscribe(
     (_) => {
-        updateHash();
+        // console.log( 'popped state!');
+        updateContentFromHashIfNecessary();
     }
-);
-
-const hash_changed = fromEvent( window, 'hashchange' );
-
-hash_changed
-    .pipe(
-        debounceTime( 250 )
-    )
-    .subscribe(
-        (_) => {
-            // console.log( 'hash has changed! ' );
-            
-            updateContentFromHashIfNecessary();
-            renderMustache();
-        }
-    )
-;
+)
 
 function updateHash() {
 
