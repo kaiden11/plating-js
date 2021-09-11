@@ -330,7 +330,12 @@ function renderMustache() {
         if( err_array.length <= 0 && obj != null && mustache_template != null ) {
 
             try {
-                output = Mustache.render( mustache_template, obj );
+                if( mustache_template.trim() == "" ) {
+                    output = stripJsonComments( JSON.stringify( obj, null, 2 ) );
+                } else {
+                    output = Mustache.render( mustache_template, obj );
+                }
+                
             } catch( err ) {
                 err_array.push( err );
             }
