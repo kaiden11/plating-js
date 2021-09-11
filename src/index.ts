@@ -28,7 +28,7 @@ export const insertTab: StateCommand = ({state, dispatch}) => {
     return true;
 }
 
-let starting_json_content = "{\"hello\":\"world\"}";
+let starting_json_content = "{\"hello\":\"world\"} // comments here";
 let starting_mustache_content = "{{hello}}";
 
 // Initial load
@@ -269,6 +269,16 @@ popstate_event.pipe(
     }
 )
 
+const SLASH_SLASH_COMMENTS = /[\/]{2}.*$/m;
+const SLASH_START_COMMENTS = /\/\*.*?\*\//ms;
+
+function stripJsonComments( json: string ) {
+    json = json.replace( SLASH_START_COMMENTS, '' );    
+    json = json.replace( SLASH_SLASH_COMMENTS, '' );
+    console.log( json );
+    return json;
+}
+
 function updateHash() {
 
     let err_array : String[] = [];
@@ -299,7 +309,9 @@ function renderMustache() {
         let obj : object = null;
         try {
             obj = JSON.parse(
-                json_view.state.doc.sliceString( 0 ) 
+                stripJsonComments(
+                    json_view.state.doc.sliceString( 0 )
+                )
             );
         } catch( err ) {
             err_array.push( err );
