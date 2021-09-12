@@ -50,12 +50,12 @@ if( window.location.hash != null && window.location.hash ) {
 
             console.log( obj );
 
-            if( obj != null && obj.json !== 'undefined' && obj.json != null ) {
-                starting_json_content = obj.json;
+            if( obj != null && obj.j !== 'undefined' && obj.j != null ) {
+                starting_json_content = obj.j;
             }
 
-            if( obj != null && obj.mustache !== 'undefined' && obj.mustache != null ) {
-                starting_mustache_content = obj.mustache;
+            if( obj != null && obj.m !== 'undefined' && obj.m != null ) {
+                starting_mustache_content = obj.m;
             }
             
         }
@@ -166,8 +166,8 @@ function updateContentFromHashIfNecessary() {
     
                 let obj = JSON.parse( json_str );
        
-                if( obj != null && obj.json !== 'undefined' && obj.json != null ) {
-                    let json_content = <string> obj.json;
+                if( obj != null && obj.j !== 'undefined' && obj.j != null ) {
+                    let json_content = <string> obj.j;
 
                     if( json_content != json_view.state.doc.sliceString( 0 ) ) {
                         // Hash content differs, update the view
@@ -187,8 +187,8 @@ function updateContentFromHashIfNecessary() {
                     }
                 }
     
-                if( obj != null && obj.mustache !== 'undefined' && obj.mustache != null ) {
-                    let mustache_content = <string> obj.mustache;
+                if( obj != null && obj.m !== 'undefined' && obj.m != null ) {
+                    let mustache_content = <string> obj.m;
 
                     if( mustache_content != mustache_view.state.doc.sliceString( 0 ) ) {
                         // Hash content differs, update the view
@@ -286,8 +286,8 @@ function updateHash() {
     if( json_view && mustache_view ) {
 
         var payload = {
-            json: json_view.state.doc.sliceString( 0 ),
-            mustache: mustache_view.state.doc.sliceString( 0 )
+            j: json_view.state.doc.sliceString( 0 ),
+            m: mustache_view.state.doc.sliceString( 0 )
         }
 
         var stringified = JSON.stringify( payload );
