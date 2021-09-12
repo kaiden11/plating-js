@@ -28,8 +28,37 @@ export const insertTab: StateCommand = ({state, dispatch}) => {
     return true;
 }
 
-let starting_json_content = "{\"hello\":\"world\"} // comments here";
-let starting_mustache_content = "{{hello}}";
+let starting_json_content = `{
+    // Enter any JSON (with optional
+    // comments, like this one), in
+    // this text editor window.
+
+    "hello":"world",
+    "key":"value"
+
+    /*
+        The keys ("hello") and values
+        ("world") can be used in the
+        next editor window using
+        Mustache templates.
+    */
+}
+`;
+let starting_mustache_content = `
+Use any valid Mustache template
+syntax in this editor.
+
+{{hello}}
+
+See:
+<a href="https://mustache.github.io/mustache.5.html">https://mustache.github.io/mustache.5.html</a>
+for more documentation on Mustache
+templates.
+
+Any reference to keys from the JSON
+object editor window will output the
+values using this template.
+`;
 
 // Initial load
 if( window.location.hash != null && window.location.hash ) {
