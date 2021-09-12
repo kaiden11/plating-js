@@ -269,8 +269,8 @@ popstate_event.pipe(
     }
 )
 
-const SLASH_SLASH_COMMENTS = /[\/]{2}.*$/m;
-const SLASH_START_COMMENTS = /\/\*.*?\*\//ms;
+const SLASH_SLASH_COMMENTS = /[\/]{2}.*$/mg;
+const SLASH_START_COMMENTS = /\/\*.*?\*\//mgs;
 
 function stripJsonComments( json: string ) {
     json = json.replace( SLASH_START_COMMENTS, '' );    
