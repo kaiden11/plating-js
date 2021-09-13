@@ -58,6 +58,10 @@ templates.
 Any reference to keys from the JSON
 object editor window will output the
 values using this template.
+
+Optionally, you can leave this window
+empty to simply output the formatted
+JSON object.
 `;
 
 // Initial load
