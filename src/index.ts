@@ -352,21 +352,30 @@ function renderMustache() {
             err_array.push( err );
         }
 
+        if( obj !== null && typeof( obj ) === 'object' ) {
 
-
-        if( typeof( obj ) === 'object' ) {
-
-            let utcnow : Date = new Date( Date.now() )
+            let now : Date = new Date( Date.now() )
 
             obj['utcnow'] = {
-                "iso": utcnow.toISOString(),
-                "locale": utcnow.toLocaleString(),
-                "year": String( utcnow.getFullYear() ).padStart( 4, '0' ),
-                "month": String( utcnow.getMonth() + 1 ).padStart( 2, '0' ),
-                "day": String( utcnow.getDate() ).padStart( 2, '0' ),
-                "hour": String( utcnow.getHours() ).padStart( 2, '0' ),
-                "minute": String( utcnow.getMinutes() ).padStart( 2, '0' ),
-                "second": String( utcnow.getSeconds() ).padStart( 2, '0' )
+                "iso": now.toISOString(),
+                "locale": now.toLocaleString(),
+                "year": String( now.getUTCFullYear() ).padStart( 4, '0' ),
+                "month": String( now.getUTCMonth() + 1 ).padStart( 2, '0' ),
+                "day": String( now.getUTCDate() ).padStart( 2, '0' ),
+                "hour": String( now.getUTCHours() ).padStart( 2, '0' ),
+                "minute": String( now.getUTCMinutes() ).padStart( 2, '0' ),
+                "second": String( now.getUTCSeconds() ).padStart( 2, '0' )
+            }
+
+            obj['now'] = {
+                "iso": now.toISOString(),
+                "locale": now.toLocaleString(),
+                "year": String( now.getFullYear() ).padStart( 4, '0' ),
+                "month": String( now.getMonth() + 1 ).padStart( 2, '0' ),
+                "day": String( now.getDate() ).padStart( 2, '0' ),
+                "hour": String( now.getHours() ).padStart( 2, '0' ),
+                "minute": String( now.getMinutes() ).padStart( 2, '0' ),
+                "second": String( now.getSeconds() ).padStart( 2, '0' )
             }
         }
 
