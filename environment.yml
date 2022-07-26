@@ -1,0 +1,6 @@
+name: plating-js
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - nodejs>16.0,<18.0

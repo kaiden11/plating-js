@@ -1,4 +1,3 @@
-
 import { EditorView, keymap} from "@codemirror/next/view"
 import { EditorState, EditorStateConfig, StateCommand } from "@codemirror/next/state"
 import { basicSetup } from "@codemirror/next/basic-setup"
@@ -9,9 +8,7 @@ import * as pako from "pako"
 import { Base64 } from "js-base64"
 import { BehaviorSubject,  fromEvent, merge } from 'rxjs';
 import { debounceTime, filter } from 'rxjs/operators';
-
-import * as Mustache from "mustache"
-import { render } from "mustache"
+import Mustache from "mustache"
 
 export const insertTab: StateCommand = ({state, dispatch}) => {
 
@@ -20,7 +17,7 @@ export const insertTab: StateCommand = ({state, dispatch}) => {
     let spaces_to_insert = " ".repeat( state.tabSize - ( col % state.tabSize ) );
 
     dispatch(
-        state.update( 
+        state.update(
             state.replaceSelection( spaces_to_insert )
         )
     );
@@ -62,6 +59,11 @@ values using this template.
 Optionally, you can leave this window
 empty to simply output the formatted
 JSON object.
+
+There are also UTC date values available:
+
+{{ utcnow.iso }}
+{{ utcnow.year }}-{{ utcnow.month }}-{{ utcnow.day }}T{{ utcnow.hour }}:{{ utcnow.minute }}:{{ utcnow.second }}
 `;
 
 // Initial load
@@ -90,7 +92,7 @@ if( window.location.hash != null && window.location.hash ) {
             if( obj != null && obj.m !== 'undefined' && obj.m != null ) {
                 starting_mustache_content = obj.m;
             }
-            
+
         }
 
     } catch( err ) {
@@ -104,7 +106,7 @@ const common_setup_array = [
     basicSetup,
     oneDark,
     EditorState.tabSize.of( 4 ),
-    keymap( 
+    keymap(
         [
             ...defaultKeymap,
             {
@@ -149,7 +151,7 @@ let json_view = new EditorView(
 
                            return true;
                         }
-                   )                    
+                   )
                 ]
             }
         )
@@ -182,23 +184,23 @@ let mustache_view = new EditorView(
 );
 
 function updateContentFromHashIfNecessary() {
-    
+
     if( window.location.hash != null && window.location.hash ) {
         var hash = window.location.hash;
-    
+
         try {
-    
+
             var u8 = Base64.toUint8Array( hash );
-    
+
             var inflated = pako.inflate( u8 );
-    
+
             if( inflated != null && inflated ) {
                 let utf8decoder = new TextDecoder()
-    
+
                 var json_str = utf8decoder.decode( inflated );
-    
+
                 let obj = JSON.parse( json_str );
-       
+
                 if( obj != null && obj.j !== 'undefined' && obj.j != null ) {
                     let json_content = <string> obj.j;
 
@@ -219,7 +221,7 @@ function updateContentFromHashIfNecessary() {
                         );
                     }
                 }
-    
+
                 if( obj != null && obj.m !== 'undefined' && obj.m != null ) {
                     let mustache_content = <string> obj.m;
 
@@ -240,9 +242,9 @@ function updateContentFromHashIfNecessary() {
                         );
                     }
                 }
-                
+
             }
-    
+
         } catch( err ) {
             console.log( err );
         }
@@ -279,7 +281,7 @@ merge(
 merge(
     json_bs,
     mustache_bs
-).pipe( 
+).pipe(
     debounceTime( 250 )
 )
 .subscribe(
@@ -306,7 +308,7 @@ const SLASH_SLASH_COMMENTS = /[\/]{2}.*$/mg;
 const SLASH_START_COMMENTS = /\/\*.*?\*\//mgs;
 
 function stripJsonComments( json: string ) {
-    json = json.replace( SLASH_START_COMMENTS, '' );    
+    json = json.replace( SLASH_START_COMMENTS, '' );
     json = json.replace( SLASH_SLASH_COMMENTS, '' );
     console.log( json );
     return json;
@@ -350,6 +352,24 @@ function renderMustache() {
             err_array.push( err );
         }
 
+
+
+        if( typeof( obj ) === 'object' ) {
+
+            let utcnow : Date = new Date( Date.now() )
+
+            obj['utcnow'] = {
+                "iso": utcnow.toISOString(),
+                "locale": utcnow.toLocaleString(),
+                "year": String( utcnow.getFullYear() ).padStart( 4, '0' ),
+                "month": String( utcnow.getMonth() + 1 ).padStart( 2, '0' ),
+                "day": String( utcnow.getDate() ).padStart( 2, '0' ),
+                "hour": String( utcnow.getHours() ).padStart( 2, '0' ),
+                "minute": String( utcnow.getMinutes() ).padStart( 2, '0' ),
+                "second": String( utcnow.getSeconds() ).padStart( 2, '0' )
+            }
+        }
+
         let mustache_template : string = null;
         try {
 
@@ -368,7 +388,7 @@ function renderMustache() {
                 } else {
                     output = Mustache.render( mustache_template, obj );
                 }
-                
+
             } catch( err ) {
                 err_array.push( err );
             }
