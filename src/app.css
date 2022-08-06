@@ -4,8 +4,8 @@
 }
 
 .plating-view {
-    height: 33vh;
-    max-height: 33vh;
+    height: 30vh;
+    max-height: 30vh;
     overflow-y: auto;
     padding: 0.1rem;
 }
@@ -16,7 +16,10 @@
 
 }
 
-
+.accordion-button {
+    padding: 0.2rem;
+    height: 3vh;
+}
 
 @media (min-width: 768px) {
     .plating-view {
@@ -24,5 +27,4 @@
         max-height: 98vh !important;
     }
 
-} 
-
+}
