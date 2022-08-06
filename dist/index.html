@@ -8,11 +8,38 @@
     <body class="bg-dark">
         <div class="container-fluid">
             <div class="row">
-                <div class="col-12 col-md-4 plating-view">
-                    <div id="json-view"></div>
+                <div class="col-12 col-md-4">
+                    <div class="accordion accordion-flush">
+                        <h2 class="accordion-header" id="json-heading">
+                            <button class="accordion-button bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-json" aria-expanded="true" aria-controls="collapse-json">
+                                JSON
+                            </button>
+                        </h2>
+                    </div>
+                    <div class="accordion-item">
+                        <div id="collapse-json" class="accordion-collapse show" aria-labelledby="json-heading">
+                            <div class="accordion-body plating-view">
+                                <div id="json-view"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-12 col-md-4 plating-view">
-                    <div id="mustache-view"></div>
+                <div class="col-12 col-md-4">
+                    <div class="accordion accordion-flush">
+                        <h2 class="accordion-header" id="json-heading">
+                            <button class="accordion-button bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-mustache" aria-expanded="true" aria-controls="collapse-mustache">
+                                Mustache
+                            </button>
+                        </h2>
+                    </div>
+                    <div class="accordion-item">
+                        <div id="collapse-mustache" class="accordion-collapse show" aria-labelledby="mustache-heading">
+                            <div class="accordion-body plating-view">
+                                <div id="mustache-view"></div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
                 <pre id="mustache-output" class="col-12 col-md-4 text-light bg-dark plating-view"></pre>
             </div>
@@ -20,5 +47,5 @@
         <script src="./bootstrap.bundle.js"></script>
         <script src="./index.bundle.js"></script>
     </body>
-    
+
     </html>
