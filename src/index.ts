@@ -9,6 +9,7 @@ import { Base64 } from "js-base64"
 import { BehaviorSubject,  fromEvent, merge } from 'rxjs';
 import { debounceTime, filter } from 'rxjs/operators';
 import Mustache from "mustache"
+import JSON5 from 'json5';
 
 export const insertTab: StateCommand = ({state, dispatch}) => {
 
@@ -81,7 +82,7 @@ if( window.location.hash != null && window.location.hash ) {
 
             var json_str = utf8decoder.decode( inflated );
 
-            let obj = JSON.parse( json_str );
+            let obj = JSON5.parse( json_str );
 
             console.log( obj );
 
@@ -199,7 +200,7 @@ function updateContentFromHashIfNecessary() {
 
                 var json_str = utf8decoder.decode( inflated );
 
-                let obj = JSON.parse( json_str );
+                let obj = JSON5.parse( json_str );
 
                 if( obj != null && obj.j !== 'undefined' && obj.j != null ) {
                     let json_content = <string> obj.j;
@@ -304,16 +305,6 @@ popstate_event.pipe(
     }
 )
 
-const SLASH_SLASH_COMMENTS = /[\/]{2}.*$/mg;
-const SLASH_START_COMMENTS = /\/\*.*?\*\//mgs;
-
-function stripJsonComments( json: string ) {
-    json = json.replace( SLASH_START_COMMENTS, '' );
-    json = json.replace( SLASH_SLASH_COMMENTS, '' );
-    console.log( json );
-    return json;
-}
-
 function updateHash() {
 
     let err_array : String[] = [];
@@ -343,11 +334,11 @@ function renderMustache() {
 
         let obj : object = null;
         try {
-            obj = JSON.parse(
-                stripJsonComments(
-                    json_view.state.doc.sliceString( 0 )
-                )
+
+            obj = JSON5.parse(
+                json_view.state.doc.sliceString( 0 )
             );
+
         } catch( err ) {
             err_array.push( err );
         }
@@ -393,7 +384,7 @@ function renderMustache() {
 
             try {
                 if( mustache_template.trim() == "" ) {
-                    output = stripJsonComments( JSON.stringify( obj, null, 2 ) );
+                    output = JSON5.stringify( obj, null, 2 );
                 } else {
                     output = Mustache.render( mustache_template, obj );
                 }

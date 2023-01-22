@@ -30,6 +30,7 @@
     "@popperjs/core": "^2.6.0",
     "bootstrap": "^5.0.2",
     "js-base64": "^3.6.0",
+    "json5": "^2.2.3",
     "mustache": "^4.2.0",
     "pako": "^2.0.2",
     "rxjs": "^6.6.3"
