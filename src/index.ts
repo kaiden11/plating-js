@@ -1,9 +1,9 @@
-import { EditorView, keymap} from "@codemirror/next/view"
-import { EditorState, EditorStateConfig, StateCommand } from "@codemirror/next/state"
-import { basicSetup } from "@codemirror/next/basic-setup"
-import { defaultKeymap, indentLess, indentMore } from "@codemirror/next/commands"
-import { json } from "@codemirror/next/lang-json"
-import { oneDark } from "@codemirror/next/theme-one-dark"
+import { EditorView, keymap} from "@codemirror/view"
+import { EditorState, StateCommand } from "@codemirror/state"
+import { basicSetup } from "codemirror"
+import { defaultKeymap, indentLess, indentMore } from "@codemirror/commands"
+import { json } from "@codemirror/lang-json"
+import { oneDark } from "@codemirror/theme-one-dark"
 import * as pako from "pako"
 import { Base64 } from "js-base64"
 import { BehaviorSubject,  fromEvent, merge } from 'rxjs';
@@ -13,8 +13,8 @@ import JSON5 from 'json5';
 
 export const insertTab: StateCommand = ({state, dispatch}) => {
 
-    let line = state.doc.lineAt( state.selection.primary.from );
-    let col = state.selection.primary.from - line.from;
+    let line = state.doc.lineAt( state.selection.main.from );
+    let col = state.selection.main.from - line.from;
     let spaces_to_insert = " ".repeat( state.tabSize - ( col % state.tabSize ) );
 
     dispatch(
@@ -107,7 +107,7 @@ const common_setup_array = [
     basicSetup,
     oneDark,
     EditorState.tabSize.of( 4 ),
-    keymap(
+    keymap.of(
         [
             ...defaultKeymap,
             {
