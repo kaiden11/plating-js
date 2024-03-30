@@ -10,6 +10,7 @@ import { BehaviorSubject,  fromEvent, merge } from 'rxjs';
 import { debounceTime, filter } from 'rxjs/operators';
 import Mustache from "mustache"
 import JSON5 from 'json5';
+import CBOR from 'cbor-js';
 
 export const insertTab: StateCommand = ({state, dispatch}) => {
 
@@ -27,19 +28,8 @@ export const insertTab: StateCommand = ({state, dispatch}) => {
 }
 
 let starting_json_content = `{
-    // Enter any JSON (with optional
-    // comments, like this one), in
-    // this text editor window.
-
     "hello":"world",
     "key":"value"
-
-    /*
-        The keys ("hello") and values
-        ("world") can be used in the
-        next editor window using
-        Mustache templates.
-    */
 }
 `;
 let starting_mustache_content = `
@@ -69,25 +59,22 @@ There are also UTC date values available:
 
 // Initial load
 if( window.location.hash != null && window.location.hash ) {
-    var hash = window.location.hash;
+    const hash = window.location.hash;
 
     try {
 
-        var u8 = Base64.toUint8Array( hash );
+        const u8 = Base64.toUint8Array( hash );
 
-        var inflated = pako.inflate( u8 );
+        const inflated = pako.inflate( u8 );
 
         if( inflated != null && inflated ) {
-            let utf8decoder = new TextDecoder()
 
-            var json_str = utf8decoder.decode( inflated );
-
-            let obj = JSON5.parse( json_str );
+            const obj = CBOR.decode( inflated.buffer )
 
             console.log( obj );
 
             if( obj != null && obj.j !== 'undefined' && obj.j != null ) {
-                starting_json_content = obj.j;
+                starting_json_content = JSON.stringify( obj.j, undefined, 2 );
             }
 
             if( obj != null && obj.m !== 'undefined' && obj.m != null ) {
@@ -187,23 +174,20 @@ let mustache_view = new EditorView(
 function updateContentFromHashIfNecessary() {
 
     if( window.location.hash != null && window.location.hash ) {
-        var hash = window.location.hash;
+        const hash = window.location.hash;
 
         try {
 
-            var u8 = Base64.toUint8Array( hash );
+            const u8 = Base64.toUint8Array( hash );
 
-            var inflated = pako.inflate( u8 );
+            const inflated = pako.inflate( u8 );
 
             if( inflated != null && inflated ) {
-                let utf8decoder = new TextDecoder()
 
-                var json_str = utf8decoder.decode( inflated );
-
-                let obj = JSON5.parse( json_str );
+                let obj = CBOR.decode( inflated.buffer );
 
                 if( obj != null && obj.j !== 'undefined' && obj.j != null ) {
-                    let json_content = <string> obj.j;
+                    let json_content = <string> JSON.stringify( obj.j, undefined, 2 );
 
                     if( json_content != json_view.state.doc.sliceString( 0 ) ) {
                         // Hash content differs, update the view
@@ -311,14 +295,19 @@ function updateHash() {
 
     if( json_view && mustache_view ) {
 
+        // var payload = {
+        //     j: json_view.state.doc.sliceString( 0 ),
+        //     m: mustache_view.state.doc.sliceString( 0 )
+        // }
+
         var payload = {
-            j: json_view.state.doc.sliceString( 0 ),
+            j: JSON5.parse( json_view.state.doc.sliceString( 0 ) ),
             m: mustache_view.state.doc.sliceString( 0 )
         }
 
-        var stringified = JSON.stringify( payload );
+        var cbored = CBOR.encode( payload )
 
-        var deflated = pako.deflate( stringified );
+        var deflated = pako.deflate( cbored );
 
         var encoded = Base64.fromUint8Array( deflated );
 
@@ -335,7 +324,7 @@ function renderMustache() {
         let obj : object = null;
         try {
 
-            obj = JSON5.parse(
+            obj = JSON.parse(
                 json_view.state.doc.sliceString( 0 )
             );
 
@@ -384,7 +373,7 @@ function renderMustache() {
 
             try {
                 if( mustache_template.trim() == "" ) {
-                    output = JSON5.stringify( obj, null, 2 );
+                    output = JSON.stringify( obj, null, 2 );
                 } else {
                     output = Mustache.render( mustache_template, obj );
                 }

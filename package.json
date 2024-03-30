@@ -34,6 +34,7 @@
     "@codemirror/view": "^6.7.3",
     "@popperjs/core": "^2.6.0",
     "bootstrap": "^5.0.2",
+    "cbor-js": "^0.1.0",
     "codemirror": "^6.0.1",
     "js-base64": "^3.6.0",
     "json5": "^2.2.3",
