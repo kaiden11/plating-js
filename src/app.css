@@ -23,8 +23,8 @@
 
 @media (min-width: 768px) {
     .plating-view {
-        height: 48vh !important;
-        max-height: 48vh !important;
+        height: 45vh !important;
+        max-height: 45vh !important;
     }
 
 }
